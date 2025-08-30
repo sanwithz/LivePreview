@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Live Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+padding: 4px;
+        background: linear-gradient(0deg, rgba(252, 233, 233, 1) 0%, rgba(224, 244, 241, 1) 26%, rgba(255, 255, 255, 1) 71%);
+            min-height: 100vh;
+        }
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            min-height: calc(100vh - 40px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 24px 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: calc(100vh - 140px);
+        }
+
+        .editor-panel {
+            background: #1e1e1e;
+            position: relative;
+        }
+
+        .panel-header {
+            background: #2d2d2d;
+            color: #e5e5e5;
+            padding: 16px 24px;
+            font-weight: 600;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-header::before {
+            content: "💻";
+            font-size: 1.2rem;
+        }
+
+        .preview-panel .panel-header::before {
+            content: "👁️";
+        }
+
+        .code-editor {
+            width: 100%;
+            height: calc(100% - 60px);
+            background: #1e1e1e;
+            color: #e5e5e5;
+            border: none;
+            padding: 24px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        .code-editor::placeholder {
+            color: #888;
+            font-style: italic;
+        }
+
+        .preview-panel {
+            background: #f8fafc;
+            border-left: 1px solid #e2e8f0;
+        }
+
+        .preview-frame {
+            width: 100%;
+            height: calc(100% - 60px);
+            border: none;
+            background: white;
+        }
+
+        .toolbar {
+            position: absolute;
+            top: 16px;
+            right: 24px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+        }
+
+        .btn.secondary {
+            background: #6b7280;
+        }
+
+        .btn.secondary:hover {
+            background: #4b5563;
+        }
+
+        .status-bar {
+            background: #f1f5f9;
+            padding: 12px 24px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+            
+            .preview-panel {
+                border-left: none;
+                border-top: 1px solid #e2e8f0;
+            }
+            
+            .container {
+                margin: 10px;
+                min-height: calc(100vh - 20px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="main-content">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    HTML Editor
+                </div>
+                <div class="toolbar">
+                    <button class="btn" onclick="clearEditor()">Clear</button>
+                    <button class="btn secondary" onclick="loadSample()">Sample</button>
+                </div>
+                <textarea 
+                    class="code-editor" 
+                    id="htmlInput" 
+                    placeholder="Paste your complete HTML code here (with or without DOCTYPE)...
+
+Examples:
+• Full HTML document with <!DOCTYPE html>
+• Just HTML snippets like <div>...</div>
+• Complete pages with <head> and <body>
+
+The preview will handle both formats automatically!"
+                    oninput="updatePreview()"
+                ></textarea>
+            </div>
+            
+            <div class="preview-panel">
+                <div class="panel-header">
+                    Live Preview
+                </div>
+                <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>Ready</span>
+            </div>
+            <div id="charCount">0 characters</div>
+        </div>
+    </div>
+
+    <script>
+        const htmlInput = document.getElementById('htmlInput');
+        const previewFrame = document.getElementById('previewFrame');
+        const charCount = document.getElementById('charCount');
+
+        function updatePreview() {
+            const htmlCode = htmlInput.value.trim();
+            const previewDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+            
+            let finalHtml;
+            
+            // Check if the code already contains DOCTYPE or is a complete HTML document
+            if (htmlCode.toLowerCase().includes('<!doctype') || 
+                htmlCode.toLowerCase().includes('<html')) {
+                // Use the code as-is if it's already a complete document
+                finalHtml = htmlCode;
+            } else {
+                // Wrap partial HTML in a complete document structure
+                finalHtml = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>
+                            body { 
+                                margin: 0; 
+                                padding: 20px; 
+                                font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${htmlCode}
+                    </body>
+                    </html>
+                `;
+            }
+            
+            previewDoc.open();
+            previewDoc.write(finalHtml);
+            previewDoc.close();
+            
+            // Update character count
+            charCount.textContent = `${htmlCode.length} characters`;
+        }
+
+        function clearEditor() {
+            htmlInput.value = '';
+            updatePreview();
+            htmlInput.focus();
+        }
+
+        function loadSample() {
+            const sampleHtml = `<div style="max-width: 600px; margin: 0 auto; padding: 40px 20px; text-align: center;">
+    <h1 style="color: #4f46e5; font-size: 2.5rem; margin-bottom: 20px;">
+        🚀 Welcome to HTML Preview
+    </h1>
+    
+    <p style="font-size: 1.2rem; color: #64748b; margin-bottom: 30px;">
+        This is a sample HTML snippet to get you started!
+    </p>
+    
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                color: white; padding: 30px; border-radius: 12px; margin: 20px 0;">
+        <h2 style="margin-bottom: 15px;">Interactive Elements</h2>
+        <button onclick="this.style.background='#10b981'; this.textContent='Clicked!'" 
+                style="background: #4f46e5; color: white; border: none; 
+                       padding: 12px 24px; border-radius: 8px; cursor: pointer; 
+                       font-size: 16px; margin: 5px;">
+            Click Me!
+        </button>
+        
+        <button onclick="document.body.style.background = 
+                        document.body.style.background === 'lightblue' ? 'white' : 'lightblue'" 
+                style="background: #7c3aed; color: white; border: none; 
+                       padding: 12px 24px; border-radius: 8px; cursor: pointer; 
+                       font-size: 16px; margin: 5px;">
+            Toggle Background
+        </button>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+                gap: 20px; margin: 30px 0;">
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 2px solid #e2e8f0;">
+            <h3 style="color: #1e293b; margin-bottom: 10px;">📝 Feature 1</h3>
+            <p style="color: #64748b;">Real-time preview of your HTML code</p>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 2px solid #e2e8f0;">
+            <h3 style="color: #1e293b; margin-bottom: 10px;">⚡ Feature 2</h3>
+            <p style="color: #64748b;">Instant updates as you type</p>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 2px solid #e2e8f0;">
+            <h3 style="color: #1e293b; margin-bottom: 10px;">🎨 Feature 3</h3>
+            <p style="color: #64748b;">Beautiful, responsive design</p>
+        </div>
+    </div>
+    
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+        <p style="color: #94a3b8; font-size: 14px;">
+            Try editing this code in the editor! ✨
+        </p>
+    </footer>
+</div>`;
+            
+            htmlInput.value = sampleHtml;
+            updatePreview();
+        }
+
+        // Initialize with empty preview
+        updatePreview();
+
+        // Auto-focus the editor
+        htmlInput.focus();
+    </script>
+</body>
+</html>
